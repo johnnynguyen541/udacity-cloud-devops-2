@@ -15,7 +15,7 @@ In this project, the objectives are as follows:
 
 ## Infrastructure Diagram
 
-TODO - Put Infrastructure Diagram here
+![AWS CloudFormation - Diagram](https://github.com/johnnynguyen541/udacity-cloud-devops-2/blob/main/docs/infrastructure-diagram.jpg)
 
 ## Project Structure
 
