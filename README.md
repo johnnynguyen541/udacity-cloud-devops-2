@@ -31,11 +31,11 @@ TODO - Put Infrastructure Diagram here
 
 `aws-servers.yml` - AWS CloudFormation IaC Code - Servers
 
-`cli-create.sh` - Create AWS CloudFormation Stack
+`bash-create.sh` - Create AWS CloudFormation Stack
 
-`cli-delete.sh` - Delete AWS CloudFormation Stack
+`bash-delete.sh` - Delete AWS CloudFormation Stack
 
-`cli-update.sh` - Update AWS CloudFormation Stack
+`bash-update.sh` - Update AWS CloudFormation Stack
 
 `LICENSE` - License
 
