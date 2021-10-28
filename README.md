@@ -19,7 +19,7 @@ TODO - Put Infrastructure Diagram here
 
 ## Project Structure
 
-`docs/cli-example.txt` - Infrastructure Diagram (Draw.io and png File)
+`docs/` - Infrastructure Diagram (Draw.io and png File)
 
 `starting-code/` - All of the starting Code
 
