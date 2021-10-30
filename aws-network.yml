@@ -1,15 +1,15 @@
 ---
 Description: >
-  AWS CloudFormation script that creates Netowrk Infrastructure and Exports.  This includes:
+  AWS CloudFormation script that creates Network Infrastructure and Exports.  This includes:
    - VPC 
-   - Private and Public Subnet
+   - Private and Public Subnets
+   - Private and Public Routing Tables
 
 Parameters:
 
   EnvironmentName:
     Description: An environment name that will be prefixed to resource names
     Type: String
-    Default: Default Environmnent Name
 
   VpcCIDR: 
     Description: The IP range (CIDR notation) for this VPC
@@ -110,13 +110,13 @@ Resources:
   # Elastic IP = Depends on Internet Gateway, Attaches to NAT Gateway
   NATGateway1EIP:
     Type: AWS::EC2::EIP
-    DependsOn: AttachInternetGateway
+    DependsOn: AttachInternetGW
     Properties: 
       Domain: vpc
 
   NATGateway2EIP:
     Type: AWS::EC2::EIP
-    DependsOn: AttachInternetGateway
+    DependsOn: AttachInternetGW
     Properties:
       Domain: vpc
 
@@ -155,7 +155,7 @@ Resources:
 
   PublicInternetRoute:
     Type: AWS::EC2::Route
-    DependsOn: AttachInternetGateway
+    DependsOn: AttachInternetGW
     Properties:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0  # Things in here send to NAT Gateway1

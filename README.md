@@ -10,7 +10,7 @@ In this project, the objectives are as follows:
 
 * Script: Deploy Webservers for highly available app via IaC
   * IaC (AWS CloudFormation)
-  * Application (Apache Web SErver)
+  * Application (Apache Web Server)
   * Storage (S3)
 
 ## Infrastructure Diagram
@@ -63,7 +63,7 @@ In this project, the objectives are as follows:
 
 * Other Notes:
   * For Troubleshooting:
-    * deploy apps in public subnets initially (with SSH key set in launch config and port 22 open)
+    * Deploy apps in public subnets initially (with SSH key set in launch config and port 22 open)
     * Log information for UserData scripts is located in this file: cloud-init-output.log under the folder: /var/log.
     * The provided UserData script should help you install all the required dependencies - but it takes several minutes to complete and few seconds to load (note this for load blancer health check)
     * Set up a Jump Box to SSH.

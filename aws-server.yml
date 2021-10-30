@@ -1,33 +1,286 @@
+---
+Description: >
+  AWS CloudFormation script that creates Servers.  This includes:
+   - IAM Roles
+   - Load Balancer
+   - Auto Scaling Groups
+   - Bastion Host/JumpBox
+
 Parameters:
-  # Paramenters are entirely optional.
-  # but using them will make your cloudformation templates more reusable
-  # use them for things that may change over time, such as instance type,
-  # VPCs and so on.
+
+  EnvironmentName:
+    Description: An environment name that will be prefixed to resource names
+    Type: String
+  
+  PrivateEC2Key: 
+    Description: Key for Private EC2 Instance
+    Type: String
+  
+  JumpboxKey: 
+    Description: Key for Jumpbox EC2 Instance
+    Type: String
+  
+  AmiIDAutoscale:
+    Description: AMI ID of Autoscale EC2 Instances (Ubuntu)
+    Type: String
+
+  AmiIDJumpbox:
+    Description: AMI ID of Jumpbox EC2 Instances (Amazon Linux)
+    Type: String
+
+  UserIPAddr:
+    Description: User IP Address (For Enable SSH Ingress to SSH into Jumpbox)
+    Type: String
+
+  AutoscaleServerType:
+    Description: Autoscale EC2 Instance Type
+    Type: String
+
+  JumpboxServerType:
+    Description: Autoscale EC2 Instance Type
+    Type: String
+  
+  # In Addition, the Following Exports are used from aws-network.yml
+  # - VPC:                    ${EnvironmentName}-VPC
+  # - PublicSubnets:          ${EnvironmentName}-PUB-NETS
+  # - PrivateSubnets:         ${EnvironmentName}-PRIV-NETS
+  # - PublicSubnet1:          ${EnvironmentName}-PUB1-SN
+  # - PublicSubnet2:          ${EnvironmentName}-PUB2-SN
+  # - PrivateSubnet1:         ${EnvironmentName}-PRI1-SN
+  # - PrivateSubnet2:         ${EnvironmentName}-PRI2-SN
+  # - VPCPublicRouteTable:    ${EnvironmentName}-PUB-RT
+  # - VPCPrivateRouteTable1:  ${EnvironmentName}-PRI1-RT
+  # - VPCPrivateRouteTable2:  ${EnvironmentName}-PRI2-RT
+
 Resources:
   # instace profile contains the IAM Role name(s) that we want to associate to our auto scaling EC2 Servers
   # never give too much permissions to your EC2 instances! if they get hacked, the permissions get hacked also!
   # in this example, I create a Role called UdacityS3ReadOnlyC2 and just give it a policy of S3 Read-Only Access
-  ProfileWithRolesForOurApp:
-    Type: AWS::IAM::InstanceProfile
-    Properties: 
-      Roles:
-        - UdacityS3ReadOnlyEC2
-Outputs: 
-  # This is also optional.
-  # Bonus points for useful outputs!
-  # for example, if you create a Load Balancer
-  # it's nice to output the URL to it here, so that we don't have to go to the console to get it.
+  # ProfileWithRolesForOurApp:
+  #   Type: AWS::IAM::InstanceProfile
+  #   Properties: 
+  #     Roles:
+  #       - UdacityS3ReadOnlyEC2
 
-# Sample UserData
-# When creating your Launch Configuration, you may need a UserData script
-# here's one that you can use for Ubuntu Linux that will:
-# Install Apache Web Server, Start it, and create an index.html that will be displayed
-# when you visit the IP address of this server with your web browser
-#Here it is:
-#
-#          #!/bin/bash
-#          apt-get update -y
-#          apt-get install apache2 -y
-#          systemctl start apache2.service
-#          cd /var/www/html
-#          echo "Udacity Demo Web Server Up and Running!" > index.html
+  # IAM
+  # - Role: allow EC2 Session Manager Access
+  RoleForSSMAccess: 
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  # - Instance Profile
+  ServerInstanceProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Roles: 
+        - !Ref RoleForSSMAccess
+
+  # Security Groups
+  # SecGroup - Load Balancer/Webservers
+  LBSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP to our load balancer
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  # SecGroup - Webservers in AutoScaling Group
+  WebServerSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP and SSH to WebServers, all traffic outbound
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPC"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+  
+  # SecGroup - Jumpbox
+  JumpboxSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Inbound TCP port 22 (SSH), unrestricted outbound
+      GroupName: Security Group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref UserIPAddr
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPC"  # NETWORK EXPORT
+      Tags: 
+        - Key: "Name"
+          Value: !Sub ${EnvironmentName} EC2 Security Group
+
+  # AutoScaling
+  # AS - Launch Config for EC2 instances
+  WebAppLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get install apache2 -y
+          systemctl start apache2.service
+          cd /var/www/html
+          echo "it works! Udagram, Udacity" > index.html
+      ImageId: !Ref AmiIDAutoscale
+      IamInstanceProfile: !Ref ServerInstanceProfile
+      KeyName: !Ref PrivateEC2Key
+      SecurityGroups:
+        - Ref: WebServerSecGroup
+      InstanceType: !Ref AutoscaleServerType
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeSize: '10'
+
+  # AS - Autoscaling Group
+  WebAppGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - Fn::ImportValue: 
+            !Sub "${EnvironmentName}-PRIV-NETS"
+      LaunchConfigurationName:
+        Ref: WebAppLaunchConfig
+      MinSize: '2'
+      MaxSize: '4'
+      TargetGroupARNs:
+        - Ref: WebAppTargetGroup
+
+  # Load Balancer
+  # LB - Resource
+  WebAppLB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      # SubnetMappings:
+      #   - SubnetId: 
+      #     Fn::ImportValue: !Sub "${EnvironmentName}-PUB1-SN"
+      #   - SubnetId: 
+      #     Fn::ImportValue: !Sub "${EnvironmentName}-PUB2-SN"
+      Subnets:
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PRI1-SN"
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PRI2-SN"
+      SecurityGroups:
+        - Ref: LBSecGroup
+
+  # LB - Listener
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn:
+            Ref: WebAppTargetGroup
+      LoadBalancerArn:
+        Ref: WebAppLB
+      Port: '80'
+      Protocol: HTTP
+
+  # LB - Listener Rule
+  ALBListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref 'WebAppTargetGroup'
+      Conditions:
+        - Field: path-pattern
+          Values: [/]
+      ListenerArn: !Ref 'Listener'
+      Priority: 1
+
+  # LB - Target Group
+  WebAppTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 8
+      HealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: 
+        Fn::ImportValue:
+          Fn::Sub: "${EnvironmentName}-VPC"
+
+  # Jumpbox EC2 Instances
+  JumpboxInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeSize: '10'
+      # IamInstanceProfile: !Ref ServerInstanceProfile
+      ImageId: !Ref AmiIDJumpbox
+      InstanceType: !Ref JumpboxServerType
+      KeyName: !Ref JumpboxKey
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet: 
+            - !Ref JumpboxSecurityGroup
+          SubnetId:
+            Fn::ImportValue:
+              !Sub "${EnvironmentName}-PUB1-SN"  # NETWORK EXPORT
+      Tags:
+        - Key: "Name"
+          Value: !Sub ${EnvironmentName} Jumpbox EC2 (AZ1)
+
+Outputs: 
+
+  LBURL: 
+    Description: Load Balancer URL
+    Value: !GetAtt WebAppLB.DNSName
+    Export:
+      Name: !Sub ${EnvironmentName}-LB-URL
+
+  JumpboxURL: 
+    Description: JumpBox URL
+    Value: !GetAtt JumpboxInstance.PublicDnsName
+    Export:
+      Name: !Sub ${EnvironmentName}-JUMPBOX-URL
+...
