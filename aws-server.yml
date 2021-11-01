@@ -183,7 +183,7 @@ Resources:
             !Sub "${EnvironmentName}-PRIV-NETS"
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
-      MinSize: '2'
+      MinSize: '4'
       MaxSize: '4'
       TargetGroupARNs:
         - Ref: WebAppTargetGroup
@@ -269,14 +269,12 @@ Outputs:
 
   LBDNSName:
     Description: Load Balancer DNS Name
-    # Value: !GetAtt WebAppLB.DNSName
     Value: !Sub "http://${WebAppLB.DNSName}/"
     Export:
       Name: !Sub ${EnvironmentName}-LB-URL
 
   JumpboxDNSName: 
     Description: JumpBox DNS Name
-    # Value: !GetAtt JumpboxInstance.PublicDnsName
     Value: !Sub "http://${JumpboxInstance.PublicDnsName}/"
     Export:
       Name: !Sub ${EnvironmentName}-JUMPBOX-URL
