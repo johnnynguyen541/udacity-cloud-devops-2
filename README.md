@@ -21,7 +21,7 @@ In this project, the objectives are as follows:
 
 `docs/` - Infrastructure Diagram (Draw.io and png File)
 
-`starting-code/` - All of the starting Code
+`starting-code/` - All of the starting code from Udacity
 
 `aws-network-parameters.json` - Network Parameters File
 
@@ -40,6 +40,31 @@ In this project, the objectives are as follows:
 `LICENSE` - License
 
 `README.md` - README file with instructions
+
+## Usage
+
+### Prerequisites
+
+Ensure AWS CLI is installed with proper user credentials.
+
+Ensure that S3 bucket "project-2-s3" with following command:
+
+`$ aws s3 ls
+2021-11-01 03:16:26 project-2-s3`
+
+Then first create the network infrastructure:
+
+`$ ./bash-create.sh project-2-network aws-network.yml aws-network-parameters.json us-west-2`
+
+Afterwards, create all the servers:
+
+`$ ./bash-create.sh project-2-servers aws-server.yml aws-server-parameters.json us-west-2`
+
+To delete, run the following commands:
+
+`$ ./bash-delete.sh project-2-servers`
+
+`$ ./bash-delete.sh project-2-network`
 
 ## Problem
 
@@ -104,7 +129,3 @@ From link: https://review.udacity.com/#!/rubrics/2556/view
 | ------------- | ------------- |
 | Output  | Any values in the output section are a bonus  |
 | Bastion Host  | Any resource of type AWS::EC2::Instance, optional, but nice to have.  |
-
-## Usage
-
-TODO
