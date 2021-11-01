@@ -37,7 +37,11 @@ Parameters:
     Type: String
 
   JumpboxServerType:
-    Description: Autoscale EC2 Instance Type
+    Description: Jumpbox EC2 Instance Type
+    Type: String
+
+  S3Name:
+    Description: Endpoint for S3 Bucket
     Type: String
   
   # In Addition, the Following Exports are used from aws-network.yml
@@ -53,18 +57,10 @@ Parameters:
   # - VPCPrivateRouteTable2:  ${EnvironmentName}-PRI2-RT
 
 Resources:
-  # instace profile contains the IAM Role name(s) that we want to associate to our auto scaling EC2 Servers
-  # never give too much permissions to your EC2 instances! if they get hacked, the permissions get hacked also!
-  # in this example, I create a Role called UdacityS3ReadOnlyC2 and just give it a policy of S3 Read-Only Access
-  # ProfileWithRolesForOurApp:
-  #   Type: AWS::IAM::InstanceProfile
-  #   Properties: 
-  #     Roles:
-  #       - UdacityS3ReadOnlyEC2
 
   # IAM
-  # - Role: allow EC2 Session Manager Access
-  UdacityS3ReadOnlyEC2: 
+  # - Role for EC2 Instances
+  S3ReadOnlyEC2Role: 
     Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
@@ -76,17 +72,30 @@ Resources:
                 - ec2.amazonaws.com
             Action:
               - 'sts:AssumeRole'
-      Description: Access to S3 buckets
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Path: "/"
+  
+  # - Policy for EC2 Instances
+  S3ReadOnlyEC2Policy:
+    Type: "AWS::IAM::Policy"
+    Properties: 
+      PolicyName: "root"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "s3:*"
+            #Action: "s3:GetObject"
+            Resource: '*'
+      Roles:
+        - Ref: S3ReadOnlyEC2Role
 
   # - Instance Profile
   ServerInstanceProfile: 
     Type: "AWS::IAM::InstanceProfile"
-    Properties: 
-      InstanceProfileName: ServerInstanceProfile
+    Properties:
+      Path: "/"
       Roles: 
-        - !Ref RoleForSSUdacityS3ReadOnlyEC2MAccess
+        - !Ref S3ReadOnlyEC2Role
 
   # Security Groups
   # SecGroup - Load Balancer/Webservers
@@ -161,10 +170,13 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           apt-get update -y
+          apt-get install unzip awscli -y
           apt-get install apache2 -y
           systemctl start apache2.service
           cd /var/www/html
-          echo "it works! Udagram, Udacity" > index.html
+          mv index.html index.html.bk
+          aws s3 cp s3://${S3Name}/udacity.zip .
+          unzip -o udacity.zip
       ImageId: !Ref AmiIDAutoscale
       IamInstanceProfile: !Ref ServerInstanceProfile
       KeyName: !Ref PrivateEC2Key
@@ -269,12 +281,14 @@ Resources:
 
 Outputs: 
 
+  # Load Balancer HTTP URL
   LBDNSName:
     Description: Load Balancer DNS Name
     Value: !Sub "http://${WebAppLB.DNSName}/"
     Export:
       Name: !Sub ${EnvironmentName}-LB-URL
 
+  # Jumpbox HTTP URL
   JumpboxDNSName: 
     Description: JumpBox DNS Name
     Value: !Sub "http://${JumpboxInstance.PublicDnsName}/"
