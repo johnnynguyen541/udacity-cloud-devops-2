@@ -64,7 +64,7 @@ Resources:
 
   # IAM
   # - Role: allow EC2 Session Manager Access
-  RoleForSSMAccess: 
+  UdacityS3ReadOnlyEC2: 
     Type: "AWS::IAM::Role"
     Properties:
       AssumeRolePolicyDocument:
@@ -76,6 +76,7 @@ Resources:
                 - ec2.amazonaws.com
             Action:
               - 'sts:AssumeRole'
+      Description: Access to S3 buckets
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
@@ -83,8 +84,9 @@ Resources:
   ServerInstanceProfile: 
     Type: "AWS::IAM::InstanceProfile"
     Properties: 
+      InstanceProfileName: ServerInstanceProfile
       Roles: 
-        - !Ref RoleForSSMAccess
+        - !Ref RoleForSSUdacityS3ReadOnlyEC2MAccess
 
   # Security Groups
   # SecGroup - Load Balancer/Webservers
@@ -249,7 +251,7 @@ Resources:
         - DeviceName: "/dev/sdk"
           Ebs:
             VolumeSize: '10'
-      # IamInstanceProfile: !Ref ServerInstanceProfile
+      IamInstanceProfile: !Ref ServerInstanceProfile
       ImageId: !Ref AmiIDJumpbox
       InstanceType: !Ref JumpboxServerType
       KeyName: !Ref JumpboxKey
