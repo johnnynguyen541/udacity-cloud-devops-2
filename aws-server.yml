@@ -12,10 +12,6 @@ Parameters:
     Description: An environment name that will be prefixed to resource names
     Type: String
   
-  PrivateEC2Key: 
-    Description: Key for Private EC2 Instance
-    Type: String
-  
   JumpboxKey: 
     Description: Key for Jumpbox EC2 Instance
     Type: String
@@ -179,7 +175,6 @@ Resources:
           unzip -o udacity.zip
       ImageId: !Ref AmiIDAutoscale
       IamInstanceProfile: !Ref ServerInstanceProfile
-      KeyName: !Ref PrivateEC2Key
       SecurityGroups:
         - Ref: WebServerSecGroup
       InstanceType: !Ref AutoscaleServerType

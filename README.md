@@ -2,6 +2,8 @@
 
 Project: Deploy a high-availability web app using CloudFormation. deploys the infrastructure and application for an Instagram-like app from the ground up.
 
+URL Deployed: http://serve-webap-1o47hiqewubwu-153264964.us-west-2.elb.amazonaws.com/
+
 ## Objective
 
 In this project, the objectives are as follows:

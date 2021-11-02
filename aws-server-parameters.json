@@ -4,10 +4,6 @@
 		"ParameterValue": "UdacityProject2"
 	},
 	{
-		"ParameterKey": "PrivateEC2Key",
-		"ParameterValue": "ud-fsjd-ec2"
-	},
-	{
 		"ParameterKey": "JumpboxKey",
 		"ParameterValue": "ud-fsjd-jumpbox"
 	},
@@ -25,11 +21,11 @@
 	},
 	{
 		"ParameterKey": "AutoscaleServerType",
-		"ParameterValue": "t3.medium"
+		"ParameterValue": "t2.micro"
 	},
 	{
 		"ParameterKey": "JumpboxServerType",
-		"ParameterValue": "t3.micro"
+		"ParameterValue": "t2.micro"
 	},
 	{
 		"ParameterKey": "S3Name",
