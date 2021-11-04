@@ -2,7 +2,7 @@
 
 Project: Deploy a high-availability web app using CloudFormation. deploys the infrastructure and application for an Instagram-like app from the ground up.
 
-URL Deployed: http://serve-webap-1o47hiqewubwu-153264964.us-west-2.elb.amazonaws.com/
+LB URL Deployed: TBD
 
 ## Objective
 
@@ -21,17 +21,19 @@ In this project, the objectives are as follows:
 
 ## Project Structure
 
+`aws-cf/` - Infrastructure as Code (AWS CloudFormation)
+
+`aws-cf/network-parameters.json` - Network Parameters File
+
+`aws-cf/network.yml` - AWS CloudFormation IaC Code - Network
+
+`aws-cf/servers-parameters.json` - Servers Parameters File
+
+`aws-cf/servers.yml` - AWS CloudFormation IaC Code - Servers
+
 `docs/` - Infrastructure Diagram (Draw.io and png File)
 
 `starting-code/` - All of the starting code from Udacity
-
-`aws-network-parameters.json` - Network Parameters File
-
-`aws-network.yml` - AWS CloudFormation IaC Code - Network
-
-`aws-servers-parameters.json` - Servers Parameters File
-
-`aws-servers.yml` - AWS CloudFormation IaC Code - Servers
 
 `bash-create.sh` - Create AWS CloudFormation Stack
 
@@ -56,11 +58,11 @@ Ensure that S3 bucket "project-2-s3" with following command:
 
 Then first create the network infrastructure:
 
-`$ ./bash-create.sh project-2-network aws-network.yml aws-network-parameters.json us-west-2`
+`$ ./bash-create.sh project-2-network aws-cf/network.yml aws-cf/network-parameters.json us-west-2`
 
 Afterwards, create all the servers:
 
-`$ ./bash-create.sh project-2-servers aws-server.yml aws-server-parameters.json us-west-2`
+`$ ./bash-create.sh project-2-servers aws-cf/server.yml aws-cf/server-parameters.json us-west-2`
 
 To delete, run the following commands:
 
