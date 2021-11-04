@@ -18,11 +18,11 @@ Parameters:
   
   AmiIDAutoscale:
     Description: AMI ID of Autoscale EC2 Instances (Ubuntu)
-    Type: String
+    Type: AWS::EC2::Image::Id
 
   AmiIDJumpbox:
     Description: AMI ID of Jumpbox EC2 Instances (Amazon Linux)
-    Type: String
+    Type: AWS::EC2::Image::Id
 
   UserIPAddr:
     Description: User IP Address (For Enable SSH Ingress to SSH into Jumpbox)
