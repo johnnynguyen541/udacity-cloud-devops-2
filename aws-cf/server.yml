@@ -118,9 +118,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow HTTP and SSH to WebServers, all traffic outbound
-      VpcId:
-        Fn::ImportValue:
-          !Sub "${EnvironmentName}-VPC"
+      GroupName: Auto Scale Security Group
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -135,13 +133,16 @@ Resources:
           FromPort: 0
           ToPort: 65535
           CidrIp: 0.0.0.0/0
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvironmentName}-VPC"
   
   # SecGroup - Jumpbox
   JumpboxSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Inbound TCP port 22 (SSH), unrestricted outbound
-      GroupName: Security Group
+      GroupName: Jumpbox Security Group
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -155,7 +156,7 @@ Resources:
           !Sub "${EnvironmentName}-VPC"  # NETWORK EXPORT
       Tags: 
         - Key: "Name"
-          Value: !Sub ${EnvironmentName} EC2 Security Group
+          Value: !Sub ${EnvironmentName} Jumpbox Security Group
 
   # AutoScaling
   # AS - Launch Config for EC2 instances
