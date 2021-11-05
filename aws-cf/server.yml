@@ -171,9 +171,6 @@ Resources:
           apt-get install apache2 -y
           systemctl start apache2.service
           cd /var/www/html
-          mv index.html index.html.bk
-          aws s3 cp s3://${S3Name}/udacity.zip .
-          unzip -o udacity.zip
       ImageId: !Ref AmiIDAutoscale
       IamInstanceProfile: !Ref ServerInstanceProfile
       KeyName: !Ref JumpboxKey
@@ -191,11 +188,11 @@ Resources:
     Properties:
       VPCZoneIdentifier:
         - Fn::ImportValue: 
-            !Sub "${EnvironmentName}-PRIV-NETS"
+            !Sub "${EnvironmentName}-PUB-NETS"
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
-      MinSize: '4'
-      MaxSize: '4'
+      MinSize: '2'
+      MaxSize: '2'
       TargetGroupARNs:
         - Ref: WebAppTargetGroup
 
