@@ -176,6 +176,7 @@ Resources:
           unzip -o udacity.zip
       ImageId: !Ref AmiIDAutoscale
       IamInstanceProfile: !Ref ServerInstanceProfile
+      KeyName: !Ref JumpboxKey
       SecurityGroups:
         - Ref: WebServerSecGroup
       InstanceType: !Ref AutoscaleServerType
