@@ -36,10 +36,6 @@ Parameters:
     Description: Jumpbox EC2 Instance Type
     Type: String
 
-  S3Name:
-    Description: Endpoint for S3 Bucket
-    Type: String
-  
   # In Addition, the Following Exports are used from aws-network.yml
   # - VPC:                    ${EnvironmentName}-VPC
   # - PublicSubnets:          ${EnvironmentName}-PUB-NETS
@@ -163,8 +159,7 @@ Resources:
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      UserData:
-        Fn::Base64: !Sub |
+      UserData: |
           #!/bin/bash
           apt-get update -y
           apt-get install unzip awscli -y
