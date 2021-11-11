@@ -26,9 +26,5 @@
 	{
 		"ParameterKey": "JumpboxServerType",
 		"ParameterValue": "t2.micro"
-	},
-	{
-		"ParameterKey": "S3Name",
-		"ParameterValue": "project-2-s3"
 	}
 ]

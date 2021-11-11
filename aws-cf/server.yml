@@ -36,10 +36,6 @@ Parameters:
     Description: Jumpbox EC2 Instance Type
     Type: String
 
-  S3Name:
-    Description: Endpoint for S3 Bucket
-    Type: String
-  
   # In Addition, the Following Exports are used from aws-network.yml
   # - VPC:                    ${EnvironmentName}-VPC
   # - PublicSubnets:          ${EnvironmentName}-PUB-NETS
@@ -163,17 +159,13 @@ Resources:
   WebAppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      UserData:
-        Fn::Base64: !Sub |
+      UserData: |
           #!/bin/bash
           apt-get update -y
           apt-get install unzip awscli -y
           apt-get install apache2 -y
           systemctl start apache2.service
           cd /var/www/html
-          mv index.html index.html.bk
-          aws s3 cp s3://${S3Name}/udacity.zip .
-          unzip -o udacity.zip
       ImageId: !Ref AmiIDAutoscale
       IamInstanceProfile: !Ref ServerInstanceProfile
       KeyName: !Ref JumpboxKey
@@ -191,11 +183,11 @@ Resources:
     Properties:
       VPCZoneIdentifier:
         - Fn::ImportValue: 
-            !Sub "${EnvironmentName}-PRIV-NETS"
+            !Sub "${EnvironmentName}-PUB-NETS"
       LaunchConfigurationName:
         Ref: WebAppLaunchConfig
-      MinSize: '4'
-      MaxSize: '4'
+      MinSize: '2'
+      MaxSize: '2'
       TargetGroupARNs:
         - Ref: WebAppTargetGroup
 
