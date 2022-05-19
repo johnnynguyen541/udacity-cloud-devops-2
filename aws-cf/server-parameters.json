@@ -17,7 +17,7 @@
 	},
 	{
 		"ParameterKey": "UserIPAddr",
-		"ParameterValue": "70.164.216.48/32"
+		"ParameterValue": "****"
 	},
 	{
 		"ParameterKey": "AutoscaleServerType",
